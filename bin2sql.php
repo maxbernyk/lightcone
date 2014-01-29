@@ -105,14 +105,14 @@ class binToSql {
 	}
 
 	public function run($path_and_prefix) {
-        $this->createDatabaseTable($this->table);
+        $this->createDatabaseTable($this->db->table);
         $total_files = $this->db->n_files*count($this->db->snapshots);
         $current_file = 1;
 		foreach (array_reverse(array_keys($this->db->snapshots)) as $s) {
 			for ($i = 0; $i <= $this->db->n_files - 1; $i++) {
 				$file_in = $path_and_prefix . sprintf("%01.3f", $this->db->snapshots[$s]) . "_$i";
 				fwrite($this->f, "$file_in...");
-				$this->processBinary($file_in, $this->db->snapshots[$s], $this->table, $i);
+				$this->processBinary($file_in, $this->db->snapshots[$s], $this->db->table, $i);
 				
 				$this->progress($current_file, $total_files);
 				$current_file++;
@@ -120,7 +120,7 @@ class binToSql {
 				fwrite($this->f, "done\n");
 			}
 		}
-		$count = $this->db->query("select count(*) as n from " . $this->table);
+		$count = $this->db->query("select count(*) as n from " . $this->db->table);
 		fwrite($this->f, "\nin files: " . $this->counter . ", in the database: " . $count[0]['n'] . "\n");
 	}
 	
@@ -256,7 +256,7 @@ class binToSql {
 		}
 		$fields = implode(", ",array_keys($d));
 		
-		$query = "insert into {$this->table} ($fields) values $data";
+		$query = "insert into {$this->db->table} ($fields) values $data";
 		$this->db->exec($query);
 	}
 	
