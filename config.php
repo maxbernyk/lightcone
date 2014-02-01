@@ -45,7 +45,13 @@ class db {
         60=>0.064,61=>0.041,62=>0.020,63=>0.000);
 
     function __construct() {
+        $this->output_file = fopen($this->table . ".dat", "w");
+        $this->header_needed = true;
         $this->connect();
+    }
+
+    function __destruct() {
+        fclose($this->output_file);
     }
 
     public function connect() {
@@ -73,13 +79,36 @@ class db {
     public function queryAndPrint($query) {
         try {
             $pg_result = pg_query($this->db, $query);
-            echo "#";
-            for ($i = 0; $i < pg_num_fields($pg_result); $i++) {
-                echo " " . pg_field_name($pg_result, $i);
+            if ($this->header_needed) {
+                echo "#";
+                for ($i = 0; $i < pg_num_fields($pg_result); $i++) {
+                    echo " " . pg_field_name($pg_result, $i);
+                }
+                echo "\n";
+                $this->header_needed = false;
             }
-            echo "\n";
             while ($row = pg_fetch_assoc($pg_result)) {
                 echo implode(" ", $row) . "\n";
+            }
+        } catch (Exception $e) {
+            echo $e->getMessage() . "\n"; 
+            return null;
+        }
+    }
+
+    public function queryAndSave($query) {
+        try {
+            $pg_result = pg_query($this->db, $query);
+            if ($this->header_needed) {
+                fwrite($this->output_file, "#");
+                for ($i = 0; $i < pg_num_fields($pg_result); $i++) {
+                    fwrite($this->output_file, " " . pg_field_name($pg_result, $i));
+                }
+                fwrite($this->output_file, "\n");
+                $this->header_needed = false;
+            }
+            while ($row = pg_fetch_assoc($pg_result)) {
+                fwrite($this->output_file, implode(" ", $row) . "\n");
             }
         } catch (Exception $e) {
             echo $e->getMessage() . "\n"; 

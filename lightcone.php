@@ -77,11 +77,19 @@ class lightcone {
     }
 
     public function getGalaxies() {
-        $this->db->queryAndPrint($this->query);
+        echo "\nsaving light-cone from `{$this->db->table}` table into {$this->db->table}.dat:\n";
+        $t0 = microtime(true);
+        $n = count($this->queries);
+        for ($i = 0; $i < $n; $i++) {
+            $this->db->queryAndSave($this->queries[$i]);
+            $this->progress($i+1, $n);
+        }
+        $t1 = microtime(true);
+        echo "finished in " . round(($t1 - $t0),2) . " sec\n\n";
     }
 
     private function buildQuery() {
-        $queries = array();
+        $this->queries = array();
         foreach ($this->boxes as $box) {
             $x  = $box['x'];
             $y  = $box['y'];
@@ -104,9 +112,8 @@ class lightcone {
             $q .= "and atan2($z,sqrt($x*$x + $y*$y)) < {$this->dec1}";
             $q .= $this->cut == "" ? "" : " and " . $this->cut;
             $q .= "\n";
-            $queries[] = $q;
+            $this->queries[] = $q;
         }
-        $this->query = implode("union\n", $queries);
     }
 
     private function stackBoxes() {
@@ -267,6 +274,29 @@ class lightcone {
                 $this->z_table[$i-1]['k'];
         }
         return $z;
+    }
+
+    function progress($current, $total) {
+        $length = 70;
+        $stop_sign = "| " . round(100*$current/$total) . "% ($current/$total) ";
+        $stop_sign_last = "| 100% ($total/$total) ";
+        if (is_numeric(exec('tput cols'))) {
+            $length = exec('tput cols') - strlen($stop_sign_last) - 1;
+        }
+        for ($place = $length + strlen($stop_sign_last); $place >= 0; $place--) {
+            echo "\x08";
+        }
+        echo "|";
+        for ($place = 1; $place <= $length; $place++) {
+            echo $place <= ($length*$current/$total) ? "~" : " ";
+        }
+        echo $stop_sign;
+        for ($i = 0; $i < (strlen($stop_sign_last) - strlen($stop_sign)); $i++) {
+            echo " ";
+        }
+        if ($current == $total) {
+            echo "\n";
+        }
     }
 }
 
