@@ -77,12 +77,17 @@ class lightcone {
     }
 
     public function getGalaxies() {
-        echo "\nsaving light-cone from `{$this->db->table}` table into {$this->db->table}.dat:\n";
+        echo "\nsaving light-cone from `{$this->db->table}` into {$this->db->table}.dat:\n";
         $t0 = microtime(true);
         $n = count($this->queries);
         for ($i = 0; $i < $n; $i++) {
             $this->db->queryAndSave($this->queries[$i]);
-            $this->progress($i+1, $n);
+            $eta = 0;
+            $time_elapsed = microtime(true) - $t0;
+            if ($time_elapsed > 30) {
+                $eta = $n*$time_elapsed/($i+1) - $time_elapsed;
+            }
+            $this->progress($i+1, $n, round($eta));
         }
         $t1 = microtime(true);
         echo "finished in " . round(($t1 - $t0),2) . " sec\n\n";
@@ -174,38 +179,86 @@ class lightcone {
     }
 
     private function randomRotation() {
-        $rand = rand(1,6);
-        $xyz = array();
-        switch ($rand) {
+        $x = "pos1";
+        $y = "pos2";
+        $z = "pos3";
+        $b = $this->db->box_size;
+        $rand_mirror = rand(1,8);
+        switch ($rand_mirror) {
             case 1:
-                $xyz[] = "pos1";
-                $xyz[] = "pos2";
-                $xyz[] = "pos3";
+                $x = "$x";
+                $y = "$y";
+                $z = "$z";
             break;
             case 2:
-                $xyz[] = "pos3";
-                $xyz[] = "pos1";
-                $xyz[] = "pos2";
+                $x = "$b-$x";
+                $y = "$y";
+                $z = "$z";
             break;
             case 3:
-                $xyz[] = "pos2";
-                $xyz[] = "pos3";
-                $xyz[] = "pos1";
+                $x = "$x";
+                $y = "$b-$y";
+                $z = "$z";
             break;
             case 4:
-                $xyz[] = "pos1";
-                $xyz[] = "pos3";
-                $xyz[] = "pos2";
+                $x = "$x";
+                $y = "$y";
+                $z = "$b-$z";
             break;
             case 5:
-                $xyz[] = "pos2";
-                $xyz[] = "pos1";
-                $xyz[] = "pos3";
+                $x = "$b-$x";
+                $y = "$b-$y";
+                $z = "$z";
             break;
             case 6:
-                $xyz[] = "pos3";
-                $xyz[] = "pos2";
-                $xyz[] = "pos1";
+                $x = "$x";
+                $y = "$b-$y";
+                $z = "$b-$z";
+            break;
+            case 7:
+                $x = "$b-$x";
+                $y = "$y";
+                $z = "$b-$z";
+            break;
+            case 8:
+                $x = "$b-$x";
+                $y = "$b-$y";
+                $z = "$b-$z";
+            break;
+        }
+
+        $rand_rotate = rand(1,6);
+        $xyz = array();
+        switch ($rand_rotate) {
+            case 1:
+                $xyz[] = $x;
+                $xyz[] = $y;
+                $xyz[] = $z;
+            break;
+            case 2:
+                $xyz[] = $z;
+                $xyz[] = $x;
+                $xyz[] = $y;
+            break;
+            case 3:
+                $xyz[] = $y;
+                $xyz[] = $z;
+                $xyz[] = $x;
+            break;
+            case 4:
+                $xyz[] = $x;
+                $xyz[] = $z;
+                $xyz[] = $y;
+            break;
+            case 5:
+                $xyz[] = $y;
+                $xyz[] = $x;
+                $xyz[] = $z;
+            break;
+            case 6:
+                $xyz[] = $z;
+                $xyz[] = $y;
+                $xyz[] = $x;
             break;
         }
         return $xyz;
@@ -276,10 +329,11 @@ class lightcone {
         return $z;
     }
 
-    function progress($current, $total) {
+    function progress($current, $total, $eta = 0) {
         $length = 70;
-        $stop_sign = "| " . round(100*$current/$total) . "% ($current/$total) ";
-        $stop_sign_last = "| 100% ($total/$total) ";
+        $time_left = $eta == 0 ? "" : " ETA: $eta sec";
+        $stop_sign = "| " . round(100*$current/$total) . "% ($current/$total)$time_left";
+        $stop_sign_last = "| 100% ($total/$total)$time_left";
         if (is_numeric(exec('tput cols'))) {
             $length = exec('tput cols') - strlen($stop_sign_last) - 1;
         }

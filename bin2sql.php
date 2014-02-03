@@ -111,7 +111,7 @@ class binToSql {
 		foreach (array_reverse(array_keys($this->db->snapshots)) as $s) {
 			for ($i = 0; $i <= $this->db->n_files - 1; $i++) {
 				$file_in = $path_and_prefix . sprintf("%01.3f", $this->db->snapshots[$s]) . "_$i";
-				fwrite($this->f, "$file_in...");
+				fwrite($this->f, sprintf("%01.3f", $this->db->snapshots[$s]) . "_$i...");
 				$this->processBinary($file_in, $this->db->snapshots[$s], $this->db->table, $i);
 				
 				$this->progress($current_file, $total_files);

@@ -32,6 +32,8 @@ class db {
     public $table = "galaxies";
     public $n_files = 8;
     public $box_size = 62.5; // Mpc
+
+    private $header_needed = false; // change to include commented header
     
     public $snapshots = array(0=>127.000,1=>79.998,2=>50.000,3=>30.000,
         4=>19.916,5=>18.244,6=>16.725,7=>15.343,8=>14.086,9=>12.941,10=>11.897,
@@ -46,7 +48,6 @@ class db {
 
     function __construct() {
         $this->output_file = fopen($this->table . ".dat", "w");
-        $this->header_needed = true;
         $this->connect();
     }
 
