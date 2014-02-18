@@ -49,7 +49,9 @@ $cone->getGalaxies();
 class lightcone {
     
     function __construct($ra_min, $ra_max, $dec_min, $dec_max, $z_min, $z_max, $cut, $include) {
-        
+        include('config.php');
+        $this->db = new db();
+
         $this->ra0  = deg2rad($ra_min);
         $this->ra1  = deg2rad($ra_max);
         $this->dec0 = deg2rad($dec_min);
@@ -60,13 +62,7 @@ class lightcone {
         $this->d1   = $this->z2d($z_max);
         $this->cut  = $cut;
         $this->incl = $include;
-        $this->make_z_table();
-
-        error_reporting(E_ALL);
-        ini_set('display_errors', 1);
-
-        include('config.php');
-        $this->db = new db();
+        // $this->make_z_table();
 
         $this->stackBoxes();
         $this->buildQuery();
@@ -77,7 +73,7 @@ class lightcone {
     }
 
     public function getGalaxies() {
-        echo "\nsaving light-cone from `{$this->db->table}` into {$this->db->table}.dat:\n";
+        echo "\nsaving the light-cone from table `{$this->db->table}` into the file {$this->db->table}.dat:\n";
         $t0 = microtime(true);
         $n = count($this->queries);
         for ($i = 0; $i < $n; $i++) {
@@ -103,11 +99,11 @@ class lightcone {
             $d1 = $box['d1'];
             $sn = $box['snapshot'];
             $q  = "select SnapNum, GalaxyId, $x as x, $y as y, $z as z, ";
-            $q .= "sqrt($x*$x + $y*$y + $z*$z) as d, ";
+            $q .= "sqrt($x*$x + $y*$y + $z*$z) as distance, ";
             $q .= "atan2($y,$x) as ra, ";
-            $q .= "atan2($z,sqrt($x*$x + $y*$y)) as dec ";
-            $q .= count($this->incl) > 0 ? ", " . implode(", ", $this->incl) . " " : "";
-            $q .= "from {$this->db->table} ";
+            $q .= "atan2($z,sqrt($x*$x + $y*$y)) as dec";
+            $q .= count($this->incl) > 0 ? ", " . implode(", ", $this->incl) : "";
+            $q .= " from {$this->db->table} ";
             $q .= "where SnapNum = $sn ";
             $q .= "and sqrt($x*$x + $y*$y + $z*$z) > $d0 ";
             $q .= "and sqrt($x*$x + $y*$y + $z*$z) <= $d1 ";
@@ -179,9 +175,9 @@ class lightcone {
     }
 
     private function randomRotation() {
-        $x = "pos1";
-        $y = "pos2";
-        $z = "pos3";
+        $x = $this->db->x;
+        $y = $this->db->y;
+        $z = $this->db->z;
         $b = $this->db->box_size;
         $rand_mirror = rand(1,8);
         switch ($rand_mirror) {
@@ -288,8 +284,8 @@ class lightcone {
         $dz = $z/$n;
         $integral = 0;
         
-        $c = 299792.458;
-        $H0 = 100; // this implies that coordinates are given in Mpc/h
+        $c = $this->db->c;
+        $H0 = $this->db->H0;
         $h = $H0/100;
         $WM = 0.25;
         $WV = 1.0 - $WM - 0.4165/($H0*$H0);

@@ -38,6 +38,7 @@ class binToSql {
 	public $counter = 0;
 	public $log_file_name = "log.txt";
 	
+    private $n_files = 8;
 	private $struct = array(
             'GalaxyType'              =>'i',  
             'GalaxyIndex'             =>'i3', 
@@ -106,10 +107,10 @@ class binToSql {
 
 	public function run($path_and_prefix) {
         $this->createDatabaseTable($this->db->table);
-        $total_files = $this->db->n_files*count($this->db->snapshots);
+        $total_files = $this->n_files*count($this->db->snapshots);
         $current_file = 1;
 		foreach (array_reverse(array_keys($this->db->snapshots)) as $s) {
-			for ($i = 0; $i <= $this->db->n_files - 1; $i++) {
+			for ($i = 0; $i <= $this->n_files - 1; $i++) {
 				$file_in = $path_and_prefix . sprintf("%01.3f", $this->db->snapshots[$s]) . "_$i";
 				fwrite($this->f, sprintf("%01.3f", $this->db->snapshots[$s]) . "_$i...");
 				$this->processBinary($file_in, $this->db->snapshots[$s], $this->db->table, $i);

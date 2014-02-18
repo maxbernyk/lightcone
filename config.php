@@ -29,11 +29,15 @@ class db {
     private $pass = "work";
     private $port = 5432;
 
-    public $table = "galaxies";
-    public $n_files = 8;
-    public $box_size = 62.5; // Mpc
+    public $table = "galaxies"; // Simulation table in the database
+    public $box_size = 62.5;    // Simulation box size, Mpc
+    public $x  = "pos1";        // X position in the table, must be in Mpc
+    public $y  = "pos2";        // Y position in the table, must be in Mpc
+    public $z  = "pos3";        // Z position in the table, must be in Mpc
+    public $H0 = 100;           // Hubble constant, km/s/Mpc
+    public $c  = 299792.458;    // Speed of light, km/s
 
-    private $header_needed = false; // change to include commented header
+    private $header_needed = false; // Change to include commented header
     
     public $snapshots = array(0=>127.000,1=>79.998,2=>50.000,3=>30.000,
         4=>19.916,5=>18.244,6=>16.725,7=>15.343,8=>14.086,9=>12.941,10=>11.897,
@@ -56,7 +60,13 @@ class db {
     }
 
     public function connect() {
-        $this->db = pg_connect("host={$this->host} port={$this->port} user={$this->user} password={$this->pass} dbname={$this->name}") or die("can't connect to the database.\n");
+        $connection_string  = "host={$this->host} ";
+        $connection_string .= "port={$this->port} ";
+        $connection_string .= "user={$this->user} ";
+        $connection_string .= "password={$this->pass} ";
+        $connection_string .= "dbname={$this->name}";
+        $this->db = pg_connect($connection_string) 
+            or die("can't connect to the database.\n");
     }
 
     public function close() {
@@ -64,64 +74,57 @@ class db {
     }
 
     public function query($query) {
-        try {
-            $pg_result = pg_query($this->db, $query);
-            $result = array();
-            while ($row = pg_fetch_assoc($pg_result)) {
-                $result[] = $row;
-            }
-            return $result;
-        } catch (Exception $e) {
-            echo $e->getMessage() . "\n"; 
-            return null;
+        $pg_result = pg_query($this->db, $query);
+        if (!$pg_result) {
+            die("\nerror in:\n$query\n");
         }
+        $result = array();
+        while ($row = pg_fetch_assoc($pg_result)) {
+            $result[] = $row;
+        }
+        return $result;
     }
 
     public function queryAndPrint($query) {
-        try {
-            $pg_result = pg_query($this->db, $query);
-            if ($this->header_needed) {
-                echo "#";
-                for ($i = 0; $i < pg_num_fields($pg_result); $i++) {
-                    echo " " . pg_field_name($pg_result, $i);
-                }
-                echo "\n";
-                $this->header_needed = false;
+        $pg_result = pg_query($this->db, $query);
+        if (!$pg_result) {
+            die("\nerror in:\n$query\n");
+        }
+        if ($this->header_needed) {
+            echo "#";
+            for ($i = 0; $i < pg_num_fields($pg_result); $i++) {
+                echo " " . pg_field_name($pg_result, $i);
             }
-            while ($row = pg_fetch_assoc($pg_result)) {
-                echo implode(" ", $row) . "\n";
-            }
-        } catch (Exception $e) {
-            echo $e->getMessage() . "\n"; 
-            return null;
+            echo "\n";
+            $this->header_needed = false;
+        }
+        while ($row = pg_fetch_assoc($pg_result)) {
+            echo implode(" ", $row) . "\n";
         }
     }
 
     public function queryAndSave($query) {
-        try {
-            $pg_result = pg_query($this->db, $query);
-            if ($this->header_needed) {
-                fwrite($this->output_file, "#");
-                for ($i = 0; $i < pg_num_fields($pg_result); $i++) {
-                    fwrite($this->output_file, " " . pg_field_name($pg_result, $i));
-                }
-                fwrite($this->output_file, "\n");
-                $this->header_needed = false;
+        $pg_result = pg_query($this->db, $query);
+        if (!$pg_result) {
+            die("\nerror in:\n$query\n");
+        }
+        if ($this->header_needed) {
+            fwrite($this->output_file, "#");
+            for ($i = 0; $i < pg_num_fields($pg_result); $i++) {
+                fwrite($this->output_file, " " . pg_field_name($pg_result, $i));
             }
-            while ($row = pg_fetch_assoc($pg_result)) {
-                fwrite($this->output_file, implode(" ", $row) . "\n");
-            }
-        } catch (Exception $e) {
-            echo $e->getMessage() . "\n"; 
-            return null;
+            fwrite($this->output_file, "\n");
+            $this->header_needed = false;
+        }
+        while ($row = pg_fetch_assoc($pg_result)) {
+            fwrite($this->output_file, implode(" ", $row) . "\n");
         }
     }
 
     public function exec($query) {
-        try {
-            $a = pg_query($this->db, $query);
-        } catch (Exception $e) {
-            echo $e->getMessage() . "\n"; 
+        $pg_result = pg_query($this->db, $query);
+        if (!$pg_result) {
+            die("\nerror in:\n$query\n");
         }
     }
 
@@ -130,10 +133,9 @@ class db {
     }
 
     public function create_index($name, $fields, $table) {
-        try {
-            pg_query($this->db, "create index $name on $table ($fields)");
-        } catch (Exception $e) {
-            echo $e->getMessage() . "\n"; 
+        $pg_result = pg_query($this->db, "create index $name on $table ($fields)");
+        if (!$pg_result) {
+            die("\nerror in:\n$query\n");
         }
     }
 
