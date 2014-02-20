@@ -34,6 +34,7 @@ class db {
     public $x  = "pos1";        // X position in the table, must be in Mpc
     public $y  = "pos2";        // Y position in the table, must be in Mpc
     public $z  = "pos3";        // Z position in the table, must be in Mpc
+    public $snapnum = "snapnum";// Simulation snapshot number
     public $H0 = 100;           // Hubble constant, km/s/Mpc
     public $c  = 299792.458;    // Speed of light, km/s
 

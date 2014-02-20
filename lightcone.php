@@ -104,7 +104,7 @@ class lightcone {
             $q .= "atan2($z,sqrt($x*$x + $y*$y)) as dec";
             $q .= count($this->incl) > 0 ? ", " . implode(", ", $this->incl) : "";
             $q .= " from {$this->db->table} ";
-            $q .= "where SnapNum = $sn ";
+            $q .= "where {$this->db->snapnum} = $sn ";
             $q .= "and sqrt($x*$x + $y*$y + $z*$z) > $d0 ";
             $q .= "and sqrt($x*$x + $y*$y + $z*$z) <= $d1 ";
             $q .= "and atan2($y,$x) > {$this->ra0} ";
