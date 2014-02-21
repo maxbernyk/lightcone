@@ -106,26 +106,28 @@ class binToSql {
 	}
 
 	public function run($path_and_prefix) {
-        $this->createDatabaseTable($this->db->table);
         $total_files = $this->n_files*count($this->db->snapshots);
         $current_file = 1;
 		foreach (array_reverse(array_keys($this->db->snapshots)) as $s) {
+            $table = $this->db->table_prfx . "_$s";
+            $this->createDatabaseTable($table);
 			for ($i = 0; $i <= $this->n_files - 1; $i++) {
 				$file_in = $path_and_prefix . sprintf("%01.3f", $this->db->snapshots[$s]) . "_$i";
 				fwrite($this->f, sprintf("%01.3f", $this->db->snapshots[$s]) . "_$i...");
-				$this->processBinary($file_in, $this->db->snapshots[$s], $this->db->table, $i);
+				$this->processBinary($file_in, $table);
 				
 				$this->progress($current_file, $total_files);
 				$current_file++;
 				
 				fwrite($this->f, "done\n");
 			}
+            $count = $this->db->query("select count(*) as n from " . $table);
+            fwrite($this->f, "\n\tin files: " . $this->counter . ", in `$table`: " . $count[0]['n'] . "\n\n");
+            $this->counter = 0;
 		}
-		$count = $this->db->query("select count(*) as n from " . $this->db->table);
-		fwrite($this->f, "\nin files: " . $this->counter . ", in the database: " . $count[0]['n'] . "\n");
 	}
 	
-	private function processBinary($file_in, $redshift, $table_name, $file_index) {
+	private function processBinary($file_in, $table_out) {
 		if (!is_file($file_in)) {
 			echo "file not found:\n\t\t$file_in\n";
 			return;
@@ -152,7 +154,7 @@ class binToSql {
 			$data_array[] = unpack($format, $binary_data);
 			$this->counter++;
 		}
-		$this->writeToDatabase($data_array);
+		$this->writeToDatabase($data_array, $table_out);
 		fclose($f);
 	}
 	
@@ -186,8 +188,8 @@ class binToSql {
 		return $bytes;
 	}
 	
-	public function createDatabaseTable() {
-		$this->db->query("drop table if exists {$this->db->table}");
+	public function createDatabaseTable($table) {
+		$this->db->query("drop table if exists $table");
 		$fields = '';
 		$comma = '';
 		foreach (array_keys($this->struct) as $s) {
@@ -218,12 +220,9 @@ class binToSql {
 			if ($comma == "") $comma = ", ";
 		}
 		
-		$query = "create table {$this->db->table} ($fields)";
+		$query = "create table $table ($fields)";
 		
 		$this->db->exec($query);
-
-		$this->db->create_index("snapnum", "SnapNum", $this->db->table);
-		$this->db->create_index("position", "Pos1, Pos2, Pos3", $this->db->table);
 	}
 	
 	private function buildFields() {
@@ -242,7 +241,7 @@ class binToSql {
 		$this->fields = implode(", ", $fields);
 	}
 	
-	private function writeToDatabase($data_array) {
+	private function writeToDatabase($data_array, $table) {
 
 		if (count($data_array) == 0) {
 			return;
@@ -257,7 +256,7 @@ class binToSql {
 		}
 		$fields = implode(", ",array_keys($d));
 		
-		$query = "insert into {$this->db->table} ($fields) values $data";
+		$query = "insert into $table ($fields) values $data";
 		$this->db->exec($query);
 	}
 	

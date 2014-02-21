@@ -29,14 +29,14 @@ class db {
     private $pass = "work";
     private $port = 5432;
 
-    public $table = "galaxies"; // Simulation table in the database
-    public $box_size = 62.5;    // Simulation box size, Mpc
-    public $x  = "pos1";        // X position in the table, must be in Mpc
-    public $y  = "pos2";        // Y position in the table, must be in Mpc
-    public $z  = "pos3";        // Z position in the table, must be in Mpc
-    public $snapnum = "snapnum";// Simulation snapshot number
-    public $H0 = 100;           // Hubble constant, km/s/Mpc
-    public $c  = 299792.458;    // Speed of light, km/s
+    public $table_prfx = "galaxies"; // Simulation table prefix in the database
+    public $gal_id = "galaxyindex1"; // Galaxy index column in the simulation tables
+    public $box_size = 62.5;         // Simulation box size, Mpc
+    public $x  = "pos1";             // X position in the simulation tables, must be in Mpc
+    public $y  = "pos2";             // Y position in the simulation tables, must be in Mpc
+    public $z  = "pos3";             // Z position in the simulation tables, must be in Mpc
+    public $H0 = 100;                // Hubble constant, km/s/Mpc
+    public $c  = 299792.458;         // Speed of light, km/s
 
     private $header_needed = false; // Change to include commented header
     
@@ -52,7 +52,7 @@ class db {
         60=>0.064,61=>0.041,62=>0.020,63=>0.000);
 
     function __construct() {
-        $this->output_file = fopen($this->table . ".dat", "w");
+        $this->output_file = fopen($this->table_prfx . ".dat", "w");
         $this->connect();
     }
 

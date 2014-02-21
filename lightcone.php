@@ -73,7 +73,7 @@ class lightcone {
     }
 
     public function getGalaxies() {
-        echo "\nsaving the light-cone from table `{$this->db->table}` into the file {$this->db->table}.dat:\n";
+        echo "\nsaving the light-cone from `{$this->db->table_prfx}_xxх` into {$this->db->table_prfx}.dat:\n";
         $t0 = microtime(true);
         $n = count($this->queries);
         for ($i = 0; $i < $n; $i++) {
@@ -98,14 +98,14 @@ class lightcone {
             $d0 = $box['d0'];
             $d1 = $box['d1'];
             $sn = $box['snapshot'];
-            $q  = "select SnapNum, GalaxyId, $x as x, $y as y, $z as z, ";
+            $id = $this->db->gal_id;
+            $q  = "select $id, $x as x, $y as y, $z as z, ";
             $q .= "sqrt($x*$x + $y*$y + $z*$z) as distance, ";
             $q .= "atan2($y,$x) as ra, ";
             $q .= "atan2($z,sqrt($x*$x + $y*$y)) as dec";
-            $q .= count($this->incl) > 0 ? ", " . implode(", ", $this->incl) : "";
-            $q .= " from {$this->db->table} ";
-            $q .= "where {$this->db->snapnum} = $sn ";
-            $q .= "and sqrt($x*$x + $y*$y + $z*$z) > $d0 ";
+            $q .= count($this->incl) > 0 ? ", " . implode(", ", $this->incl) : " ";
+            $q .= " from {$this->db->table_prfx}_" . $box['snapshot'] . " where";
+            $q .= " sqrt($x*$x + $y*$y + $z*$z) > $d0 ";
             $q .= "and sqrt($x*$x + $y*$y + $z*$z) <= $d1 ";
             $q .= "and atan2($y,$x) > {$this->ra0} ";
             $q .= "and atan2($y,$x) < {$this->ra1} ";
