@@ -10,9 +10,12 @@ modified for use with any other SQL database.
 Simulated galaxy data is expexted to be in a box volume. The script re-arranges
 the data in a shape of a light-cone.
 
-Included bin2sql.php file is a sample data import script that reads binary simu-
-lation data and uploads it into an SQL database. The script is designed to work
-with output from SAGE semi analytic-model (Croton et al. in prep.)
+Included bin2sql.php and bin2sql.py files are sample data import scripts for 
+uploading binary simulation data into a PostreSQL database. The light-cone 
+constructing script was designed to work with output from the SAGE semi-analytic
+model (Croton et al. in prep.), but will work with any other model that has 
+galaxy positions (and other properties) saved per snapshots of the simulation 
+volume distributed in time.
 
 requirements
 ============
