@@ -41,10 +41,9 @@ Before running the script:
         * simulation box size in Mpc;
         * number of files in the simulation - required for the sample uploading 
             script only;
+        * galaxy positions and the galaxy id columns.
     - upload the galaxy data to the database using the sample uploading script 
-        bin2sql.php or in a custom way;
-    - make sure galaxy coordinates are available in the uploaded table as 
-        `pos1`, `pos2`, `pos3` and the simulation snapshot number as `snapnum`;
+        bin2sql.php or bin2sql.py, or any other custom way.
 
 To run the script from command line:
 
