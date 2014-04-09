@@ -29,8 +29,8 @@ class db {
     private $pass = "work";
     private $port = 5432;
 
-    public $table_prfx = "galaxies"; // Simulation table prefix in the database
-    public $gal_id = "galaxyindex1"; // Galaxy index column in the simulation tables
+    public $table_prfx = "galaxies_mini"; // Simulation table prefix in the database
+    public $gal_id = "galaxyindex"; // Galaxy index column in the simulation tables
     public $box_size = 62.5;         // Simulation box size, Mpc
     public $x  = "pos1";             // X position in the simulation tables, must be in Mpc
     public $y  = "pos2";             // Y position in the simulation tables, must be in Mpc

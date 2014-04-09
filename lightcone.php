@@ -47,6 +47,8 @@ $cone = new lightcone($ra_min, $ra_max, $dec_min, $dec_max, $z_min, $z_max, $cut
 $cone->getGalaxies();
 
 class lightcone {
+
+    public $random = true;
     
     function __construct($ra_min, $ra_max, $dec_min, $dec_max, $z_min, $z_max, $cut, $include) {
         include('config.php');
@@ -122,25 +124,34 @@ class lightcone {
         $b = $this->db->box_size;
         $snapshot_ids = array_keys($this->db->snapshots);
 
-        for ($x0 = 0; $x0 < $this->d1*cos($this->ra0) + $b; $x0 += $b) {
-            for ($y0 = 0; $y0 < $this->d1*sin($this->ra1) + $b; $y0 += $b) {
-                for ($z0 = 0; $z0 < $this->d1*sin($this->dec1) + $b; $z0 += $b) {
+        $d_max = floor(1 + $this->d1/$b)*$b;
+
+        for ($x0 = -$d_max; $x0 < $d_max; $x0 += $b) {
+            for ($y0 = -$d_max; $y0 < $d_max; $y0 += $b) {
+                for ($z0 = -$d_max; $z0 < $d_max; $z0 += $b) {
                     $x1 = $x0+$b;
                     $y1 = $y0+$b;
                     $z1 = $z0+$b;
 
-                    $ra0 = atan2($y0,$x1);
-                    $ra1 = atan2($y1,$x0);
+                    $x00 = $x0 >= 0 ? $x0 : $x1;
+                    $y00 = $y0 >= 0 ? $y0 : $y1;
+                    $z00 = $z0 >= 0 ? $z0 : $z1;
+                    $x11 = $x0 >= 0 ? $x1 : $x0;
+                    $y11 = $y0 >= 0 ? $y1 : $y0;
+                    $z11 = $z0 >= 0 ? $z1 : $z0;
 
-                    $dec0 = atan2($z0, sqrt($x1*$x1 + $y1*$y1));
-                    $dec1 = atan2($z1, sqrt($x0*$x0 + $y0*$y0));
+                    $ra0 = atan2($y00,$x11);
+                    $ra1 = atan2($y11,$x00);
 
-                    $d0 = sqrt($x0*$x0 + $y0*$y0 + $z0*$z0);
-                    $d1 = sqrt($x1*$x1 + $y1*$y1 + $z1*$z1);
+                    $dec0 = atan2($z00, sqrt($x11*$x11 + $y11*$y11));
+                    $dec1 = atan2($z11, sqrt($x00*$x00 + $y00*$y00));
+
+                    $d0 = sqrt($x00*$x00 + $y00*$y00 + $z00*$z00);
+                    $d1 = sqrt($x11*$x11 + $y11*$y11 + $z11*$z11);
 
                     if ($d1 > $this->d0 && $d0 < $this->d1 &&
-                        $ra0 < $this->ra1 && $ra1 > $this->ra0 &&
-                        $dec0 < $this->dec1 && $dec1 > $this->dec0 ) {
+                        $ra0 <= $this->ra1 && $ra1 >= $this->ra0 &&
+                        $dec0 <= $this->dec1 && $dec1 >= $this->dec0 ) {
 
                         $need2break = false;
                         $xyz = $this->randomRotation();
@@ -178,6 +189,9 @@ class lightcone {
         $x = $this->db->x;
         $y = $this->db->y;
         $z = $this->db->z;
+        if (!$this->random) {
+            return array("$x", "$y", "$z");
+        }
         $b = $this->db->box_size;
         $rand_mirror = rand(1,8);
         switch ($rand_mirror) {
