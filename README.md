@@ -50,7 +50,7 @@ To run the script from command line:
     php lightcone.php <ra min> <ra max> <dec min> <dec max> <z min> <z max> <cut> <include>
 
     parameters:
-        * ra/dec - right ascention/declination in degrees (-180..180, -90..90);
+        * ra/dec - right ascention/declination in degrees (0..360, -90..90);
         * z - redshift of the light-cone;
         * cut - conditional expression in quotes (e.g. "StellarMass > 0.1");
         * include - additional galaxy properties to include in the catalogue

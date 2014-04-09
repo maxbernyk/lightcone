@@ -54,8 +54,8 @@ class lightcone {
         include('config.php');
         $this->db = new db();
 
-        $this->ra0  = deg2rad($ra_min);
-        $this->ra1  = deg2rad($ra_max);
+        $this->ra0  = deg2rad($ra_min-180);
+        $this->ra1  = deg2rad($ra_max-180);
         $this->dec0 = deg2rad($dec_min);
         $this->dec1 = deg2rad($dec_max);
         $this->z0   = $z_min;
