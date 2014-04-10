@@ -134,32 +134,54 @@ class lightcone {
                     $y1 = $y0+$b;
                     $z1 = $z0+$b;
 
+                    // find box RA/DEC/Dist min/max depending on a quadrant
                     if ($x0 >= 0 && $y0 >= 0) {
                         $ra0 = atan2($y0,$x1);
                         $ra1 = atan2($y1,$x0);
+                        if ($z0 >= 0) {
+                            $dec0 = atan2($z0, sqrt($x1*$x1 + $y1*$y1));
+                            $dec1 = atan2($z1, sqrt($x0*$x0 + $y0*$y0));
+                        } else {
+                            $dec0 = atan2($z0, sqrt($x0*$x0 + $y0*$y0));
+                            $dec1 = atan2($z1, sqrt($x1*$x1 + $y1*$y1));
+                        }
                     }
 
                     if ($x0 < 0 && $y0 >= 0) {
                         $ra0 = atan2($y1,$x1);
                         $ra1 = atan2($y0,$x0);
+                        if ($z0 >= 0) {
+                            $dec0 = atan2($z0, sqrt($x0*$x0 + $y1*$y1));
+                            $dec1 = atan2($z1, sqrt($x1*$x1 + $y0*$y0));
+                        } else {
+                            $dec0 = atan2($z0, sqrt($x1*$x1 + $y0*$y0));
+                            $dec1 = atan2($z1, sqrt($x0*$x0 + $y1*$y1));
+                        }
                     }
 
                     if ($x0 < 0 && $y0 < 0) {
-                        $ra0 = atan2($y1,$x0);
-                        $ra1 = atan2($y0,$x1);
-                        $ra0 = $ra0 <= 0 ? $ra0 + 2*pi() : $ra0;
-                        $ra1 = $ra1 <= 0 ? $ra1 + 2*pi() : $ra1;
+                        $ra0 = atan2(-$y1,-$x0)+pi();
+                        $ra1 = atan2(-$y0,-$x1)+pi();
+                        if ($z0 >= 0) {
+                            $dec0 = atan2($z0, sqrt($x0*$x0 + $y0*$y0));
+                            $dec1 = atan2($z1, sqrt($x1*$x1 + $y1*$y1));
+                        } else {
+                            $dec0 = atan2($z0, sqrt($x1*$x1 + $y1*$y1));
+                            $dec1 = atan2($z1, sqrt($x0*$x0 + $y0*$y0));
+                        }
                     }
 
                     if ($x0 >= 0 && $y0 < 0) {
-                        $ra0 = atan2($y0,$x0);
-                        $ra1 = atan2($y1,$x1);
-                        $ra0 = $ra0 <= 0 ? $ra0 + 2*pi() : $ra0;
-                        $ra1 = $ra1 <= 0 ? $ra1 + 2*pi() : $ra1;
+                        $ra0 = atan2(-$y0,-$x0)+pi();
+                        $ra1 = atan2(-$y1,-$x1)+pi();
+                        if ($z0 >= 0) {
+                            $dec0 = atan2($z0, sqrt($x1*$x1 + $y0*$y0));
+                            $dec1 = atan2($z1, sqrt($x0*$x0 + $y1*$y1));
+                        } else {
+                            $dec0 = atan2($z0, sqrt($x0*$x0 + $y1*$y1));
+                            $dec1 = atan2($z1, sqrt($x1*$x1 + $y0*$y0));
+                        }
                     }
-
-                    $dec0 = atan2($z0, sqrt($x1*$x1 + $y1*$y1));
-                    $dec1 = atan2($z1, sqrt($x0*$x0 + $y0*$y0));
 
                     $x00 = $x0 >= 0 ? $x0 : $x1;
                     $y00 = $y0 >= 0 ? $y0 : $y1;
@@ -171,10 +193,11 @@ class lightcone {
                     $d0 = sqrt($x00*$x00 + $y00*$y00 + $z00*$z00);
                     $d1 = sqrt($x11*$x11 + $y11*$y11 + $z11*$z11);
 
-
+                    // check if the box falls into the required coordinates range
                     if ($d1 > $this->d0 && $d0 < $this->d1 
                         && $ra0 < $this->ra1 && $ra1 > $this->ra0 
-                        && $dec0 < $this->dec1 && $dec1 > $this->dec0) {
+                        && $dec0 < $this->dec1 && $dec1 > $this->dec0
+                        ) {
 
                         $need2break = false;
                         $xyz = $this->randomRotation();
