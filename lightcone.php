@@ -54,8 +54,8 @@ class lightcone {
         include('config.php');
         $this->db = new db();
 
-        $this->ra0  = deg2rad($ra_min-180);
-        $this->ra1  = deg2rad($ra_max-180);
+        $this->ra0  = deg2rad($ra_min);
+        $this->ra1  = deg2rad($ra_max);
         $this->dec0 = deg2rad($dec_min);
         $this->dec1 = deg2rad($dec_max);
         $this->z0   = $z_min;
@@ -101,16 +101,18 @@ class lightcone {
             $d1 = $box['d1'];
             $sn = $box['snapshot'];
             $id = $this->db->gal_id;
+            $ra = "(case when $y >= 0 then atan2($y,$x) else atan2(-$y,-$x) + pi() end)";
+
             $q  = "select $id, $x as x, $y as y, $z as z, ";
             $q .= "sqrt($x*$x + $y*$y + $z*$z) as distance, ";
-            $q .= "atan2($y,$x) as ra, ";
+            $q .= "$ra as ra, ";
             $q .= "atan2($z,sqrt($x*$x + $y*$y)) as dec";
             $q .= count($this->incl) > 0 ? ", " . implode(", ", $this->incl) : " ";
             $q .= " from {$this->db->table_prfx}_" . $box['snapshot'] . " where";
             $q .= " sqrt($x*$x + $y*$y + $z*$z) > $d0 ";
             $q .= "and sqrt($x*$x + $y*$y + $z*$z) <= $d1 ";
-            $q .= "and atan2($y,$x) > {$this->ra0} ";
-            $q .= "and atan2($y,$x) < {$this->ra1} ";
+            $q .= "and $ra > {$this->ra0} ";
+            $q .= "and $ra < {$this->ra1} ";
             $q .= "and atan2($z,sqrt($x*$x + $y*$y)) > {$this->dec0} ";
             $q .= "and atan2($z,sqrt($x*$x + $y*$y)) < {$this->dec1}";
             $q .= $this->cut == "" ? "" : " and " . $this->cut;
@@ -123,7 +125,6 @@ class lightcone {
         $this->boxes = array();
         $b = $this->db->box_size;
         $snapshot_ids = array_keys($this->db->snapshots);
-
         $d_max = floor(1 + $this->d1/$b)*$b;
 
         for ($x0 = -$d_max; $x0 < $d_max; $x0 += $b) {
@@ -133,6 +134,33 @@ class lightcone {
                     $y1 = $y0+$b;
                     $z1 = $z0+$b;
 
+                    if ($x0 >= 0 && $y0 >= 0) {
+                        $ra0 = atan2($y0,$x1);
+                        $ra1 = atan2($y1,$x0);
+                    }
+
+                    if ($x0 < 0 && $y0 >= 0) {
+                        $ra0 = atan2($y1,$x1);
+                        $ra1 = atan2($y0,$x0);
+                    }
+
+                    if ($x0 < 0 && $y0 < 0) {
+                        $ra0 = atan2($y1,$x0);
+                        $ra1 = atan2($y0,$x1);
+                        $ra0 = $ra0 <= 0 ? $ra0 + 2*pi() : $ra0;
+                        $ra1 = $ra1 <= 0 ? $ra1 + 2*pi() : $ra1;
+                    }
+
+                    if ($x0 >= 0 && $y0 < 0) {
+                        $ra0 = atan2($y0,$x0);
+                        $ra1 = atan2($y1,$x1);
+                        $ra0 = $ra0 <= 0 ? $ra0 + 2*pi() : $ra0;
+                        $ra1 = $ra1 <= 0 ? $ra1 + 2*pi() : $ra1;
+                    }
+
+                    $dec0 = atan2($z0, sqrt($x1*$x1 + $y1*$y1));
+                    $dec1 = atan2($z1, sqrt($x0*$x0 + $y0*$y0));
+
                     $x00 = $x0 >= 0 ? $x0 : $x1;
                     $y00 = $y0 >= 0 ? $y0 : $y1;
                     $z00 = $z0 >= 0 ? $z0 : $z1;
@@ -140,18 +168,13 @@ class lightcone {
                     $y11 = $y0 >= 0 ? $y1 : $y0;
                     $z11 = $z0 >= 0 ? $z1 : $z0;
 
-                    $ra0 = atan2($y00,$x11);
-                    $ra1 = atan2($y11,$x00);
-
-                    $dec0 = atan2($z00, sqrt($x11*$x11 + $y11*$y11));
-                    $dec1 = atan2($z11, sqrt($x00*$x00 + $y00*$y00));
-
                     $d0 = sqrt($x00*$x00 + $y00*$y00 + $z00*$z00);
                     $d1 = sqrt($x11*$x11 + $y11*$y11 + $z11*$z11);
 
-                    if ($d1 > $this->d0 && $d0 < $this->d1 &&
-                        $ra0 <= $this->ra1 && $ra1 >= $this->ra0 &&
-                        $dec0 <= $this->dec1 && $dec1 >= $this->dec0 ) {
+
+                    if ($d1 > $this->d0 && $d0 < $this->d1 
+                        && $ra0 < $this->ra1 && $ra1 > $this->ra0 
+                        && $dec0 < $this->dec1 && $dec1 > $this->dec0) {
 
                         $need2break = false;
                         $xyz = $this->randomRotation();
